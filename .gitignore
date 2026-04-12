@@ -1,0 +1,6 @@
+logs/
+archive/
+reports/
+*.gz
+*.bz2
+*.xz

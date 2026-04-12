@@ -1,0 +1,54 @@
+#!/bin/bash
+
+# SmartLogAI - AI Powered Automated Log Monitoring and Archiving System
+
+LOG_DIR="./logs"
+ARCHIVE_DIR="./archive"
+REPORT_DIR="./reports"
+REPORT_FILE="./reports/activity.log"
+
+SIZE_THRESHOLD=20
+
+# Ensure reports directory exists
+mkdir -p "$REPORT_DIR"
+
+echo "========== SmartLogAI Execution ==========" >> "$REPORT_FILE"
+date >> "$REPORT_FILE"
+
+# Ensure archive directory exists
+mkdir -p "$ARCHIVE_DIR"
+
+# Scan all log files
+for file in $LOG_DIR/*
+do
+
+[ -e "$file" ] || continue
+
+filename=$(basename "$file")
+
+# File size in MB
+filesize=$(du -m "$file" | cut -f1)
+
+# Detect ERROR logs
+error_count=$(grep -c "ERROR" "$file" 2>/dev/null)
+
+# Rule 1: Detect Large Logs
+if [ "$filesize" -gt "$SIZE_THRESHOLD" ]; then
+
+echo "[SmartLogAI DETECTION] Large log detected: $filename" >> "$REPORT_FILE"
+gzip "$file"
+mv "$file.gz" "$ARCHIVE_DIR"
+
+# Rule 2: Detect Critical Error Logs
+elif [ "$error_count" -gt 0 ]; then
+
+echo "[SmartLogAI DETECTION] Critical error log archived: $filename" >> "$REPORT_FILE"
+gzip "$file"
+mv "$file.gz" "$ARCHIVE_DIR"
+
+fi
+
+done
+
+echo "========== SmartLogAI Process Completed ==========" >> "$REPORT_FILE"
+echo "" >> "$REPORT_FILE"
